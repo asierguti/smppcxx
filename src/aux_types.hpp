@@ -23,6 +23,7 @@
 /// @brief Defines a number of SMPP specific types and auxiliary functions.
 
 #include <cstdio>
+#include <cstring>
 #include <string>
 #include <algorithm>
 #include <vector>

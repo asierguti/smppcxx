@@ -26,7 +26,7 @@
 Smpp::AlertNotification::AlertNotification() :
     Request(CommandLength(MinLength), 
     CommandId(CommandId::AlertNotification), 
-    SequenceNumber::Min)
+    SequenceNumber(SequenceNumber::Min))
 {
 }
 
@@ -36,8 +36,8 @@ Smpp::AlertNotification::AlertNotification() :
 /// @param esmeAddr The esme address (ton, npi and address).
 Smpp::AlertNotification::AlertNotification(
         const SequenceNumber& sequenceNumber,
-        const SmeAddress& sourceAddr,
-        const SmeAddress& esmeAddr) :
+        SmeAddress&& sourceAddr,
+        SmeAddress&& esmeAddr) :
     Request(CommandLength(MinLength), 
              CommandId(CommandId::AlertNotification), 
              sequenceNumber),
@@ -53,14 +53,11 @@ Smpp::AlertNotification::AlertNotification(
 Smpp::AlertNotification::AlertNotification(const Smpp::Uint8* b) :
     Request(CommandLength(MinLength),
              CommandId(CommandId::AlertNotification),
-             1)
+             SequenceNumber(1))
 {
     decode(b);
 }
 
-Smpp::AlertNotification::~AlertNotification()
-{
-}
 
 /// @brief Encode the message into an octet array.
 /// @return Pointer to the encoded message.
@@ -87,12 +84,12 @@ Smpp::AlertNotification::decode(const Smpp::Uint8* buff)
 {
     Request::decode(buff);
 
-    Smpp::Uint32 len = Request::command_length();
+    auto len = Request::command_length();
     Smpp::Uint32 offset = 16;
     const char* err = "Bad length in alert_notification";
     if(len < offset)
         throw Error(err);
- 
+
     source_addr_.decode(buff+offset, len - offset);
     offset += source_addr_.address().length() + 3; // ton + npi + '\0'
     if(len < offset)

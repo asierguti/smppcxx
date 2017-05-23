@@ -26,7 +26,7 @@
 Smpp::QuerySm::QuerySm() :
     Request(CommandLength(MinLength), 
     CommandId(CommandId::QuerySm), 
-    SequenceNumber::Min)
+    SequenceNumber(SequenceNumber::Min))
 {
 }
 
@@ -36,8 +36,8 @@ Smpp::QuerySm::QuerySm() :
 /// @param sourceAddr The source address (ton, npi and address)t o use.
 Smpp::QuerySm::QuerySm(
         const SequenceNumber& sequenceNumber,
-        const MessageId& messageId,
-        const SmeAddress& sourceAddr) :
+        MessageId&& messageId,
+        SmeAddress&& sourceAddr) :
     Request(CommandLength(MinLength), 
              CommandId(CommandId::QuerySm), 
              sequenceNumber),
@@ -51,13 +51,9 @@ Smpp::QuerySm::QuerySm(
 /// @brief Construct from a buffer.
 /// @param b The buffer (octet array).
 Smpp::QuerySm::QuerySm(const Smpp::Uint8* b) :
-    Request(CommandLength(MinLength), CommandId(CommandId::QuerySm), 1)
+    Request(CommandLength(MinLength), CommandId(CommandId::QuerySm), SequenceNumber(1))
 {
     decode(b);
-}
-
-Smpp::QuerySm::~QuerySm()
-{
 }
 
 /// @brief Encode the message into an octet array.
@@ -88,20 +84,23 @@ Smpp::QuerySm::decode(const Smpp::Uint8* buff)
     Smpp::Uint32 len = Request::command_length();
     Smpp::Uint32 offset = 16;
     const char* err = "Bad length in query_sm";
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
  
-    const Smpp::Char* sptr = reinterpret_cast<const Smpp::Char*>(buff);
+    const auto sptr = reinterpret_cast<const Smpp::Char*>(buff);
 
     message_id_ = &sptr[offset];
     offset += message_id_.length() + 1;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     source_addr_.decode(buff+offset, len - offset);
     offset += source_addr_.address().length() + 3; // ton + npi + '\0'
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     Header::decode_tlvs(buff + offset, len - offset);
 }

@@ -26,7 +26,7 @@
 Smpp::DataSm::DataSm() :
     Request(CommandLength(MinLength), 
     CommandId(CommandId::DataSm), 
-    SequenceNumber::Min)
+    SequenceNumber(SequenceNumber::Min))
 {
 }
 
@@ -40,9 +40,9 @@ Smpp::DataSm::DataSm() :
 /// @param dataCoding The data coding value to use.
 Smpp::DataSm::DataSm(
         const SequenceNumber& sequenceNumber,
-        const ServiceType& serviceType,
-        const SmeAddress& sourceAddr,
-        const SmeAddress& destinationAddr,
+        ServiceType&& serviceType,
+        SmeAddress&& sourceAddr,
+        SmeAddress&& destinationAddr,
         const EsmClass& esmClass,
         const RegisteredDelivery& registeredDelivery,
         const DataCoding& dataCoding) :
@@ -64,13 +64,9 @@ Smpp::DataSm::DataSm(
 /// @brief Construct from a buffer.
 /// @param b The buffer (octet array).
 Smpp::DataSm::DataSm(const Smpp::Uint8* b) :
-    Request(CommandLength(MinLength), CommandId(CommandId::DataSm), 1)
+    Request(CommandLength(MinLength), CommandId(CommandId::DataSm), SequenceNumber(1))
 {
     decode(b);
-}
-
-Smpp::DataSm::~DataSm()
-{
 }
 
 /// @brief Encode the message into an octet array.
@@ -102,48 +98,55 @@ Smpp::DataSm::decode(const Smpp::Uint8* buff)
 {
     Request::decode(buff);
 
-    Smpp::Uint32 len = Request::command_length();
+    auto len = Request::command_length();
     Smpp::Uint32 offset = 16;
     const char* err = "Bad length in data_sm";
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
  
     const Smpp::Char* sptr = reinterpret_cast<const Smpp::Char*>(buff);
     service_type_ = &sptr[offset];
     offset += service_type_.length() + 1;
     
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     source_addr_.decode(buff+offset, len - offset);
     offset += source_addr_.address().length() + 3; // ton + npi + '\0'
     
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     destination_addr_.decode(buff+offset, len - offset);
     offset += destination_addr_.address().length() + 3; // ton + npi + '\0'
     
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     esm_class_ = buff[offset];
     ++offset;
     
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
     
     registered_delivery_ = buff[offset];
     ++offset;
     
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
     
     data_coding_ = buff[offset];
     ++offset;
     
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
     
     Header::decode_tlvs(buff + offset, len - offset);
 }

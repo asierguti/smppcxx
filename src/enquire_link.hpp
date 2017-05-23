@@ -46,7 +46,7 @@ namespace Smpp {
         EnquireLink(const Smpp::Uint8* b);
 
         /// @brief Destructor - does nothing.
-        ~EnquireLink();
+        ~EnquireLink() = default;
         
         /// @brief Serialize the PDU.
         /// @note The length is taken from the command_length().

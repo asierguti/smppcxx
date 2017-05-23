@@ -55,19 +55,19 @@ namespace Smpp {
         /** @brief Constructor requiring all mandatory parameters. */
         BindTransceiver(
                 const SequenceNumber& sequenceNumber,
-                const SystemId& systemId,
-                const Password& password,
-                const SystemType& systemType,
+                SystemId&& systemId,
+                Password&& password,
+                SystemType&& systemType,
                 const InterfaceVersion& interfaceVersion,
                 const Ton& addrTon,
                 const Npi& addrNpi,
-                const AddressRange& addressRange);
+                AddressRange&& addressRange);
        
         /// @brief Construct from a buffer.
         BindTransceiver(const Smpp::Uint8* b);
 
         /// @brief Destructor - does nothing.
-        ~BindTransceiver();
+        ~BindTransceiver() = default;
         
         //
         // Mutating
@@ -76,7 +76,7 @@ namespace Smpp {
         /// @brief Set the system id.
         /// @param p The new system id.
         void system_id(const SystemId& p) {
-            int diff = p.length() - system_id_.length();
+            auto diff = p.length() - system_id_.length();
             system_id_ = p;
             Header::update_length(diff);
         }
@@ -84,7 +84,7 @@ namespace Smpp {
         /// @brief Set the system id.
         /// @param p The new system id.
         void system_id(const Smpp::Char* p) {
-            int diff = strlen(p) - system_id_.length();
+            auto diff = strlen(p) - system_id_.length();
             system_id_ = p;
             Header::update_length(diff);
         }
@@ -92,7 +92,7 @@ namespace Smpp {
         /// @brief Set the password.
         /// @param p The new password.
         void password(const Password& p) {
-            int diff = p.length() - password_.length();
+            auto diff = p.length() - password_.length();
             password_ = p;
             Header::update_length(diff);
         }
@@ -100,7 +100,7 @@ namespace Smpp {
         /// @brief Set the password.
         /// @param p The new password.
         void password(const Smpp::Char* p) {
-            int diff = strlen(p) - password_.length();
+            auto diff = strlen(p) - password_.length();
             password_ = p;
             Header::update_length(diff);
         }
@@ -108,7 +108,7 @@ namespace Smpp {
         /// @brief Set the system type.
         /// @param p The new system type.
         void system_type(const SystemType& p) {
-            int diff = p.length() - system_type_.length();
+            auto diff = p.length() - system_type_.length();
             system_type_ = p;
             Header::update_length(diff);
         }
@@ -116,7 +116,7 @@ namespace Smpp {
         /// @brief Set the system type.
         /// @param p The new system type.
         void system_type(const Smpp::Char* p) {
-            int diff = strlen(p) - system_type_.length();
+            auto diff = strlen(p) - system_type_.length();
             system_type_ = p;
             Header::update_length(diff);
         }
@@ -136,7 +136,7 @@ namespace Smpp {
         /// @brief Set the address range.
         /// @param p The new address range.
         void address_range(const AddressRange& p) {
-            int diff = p.length() - address_range_.length();
+            auto diff = p.length() - address_range_.length();
             address_range_ = p;
             Header::update_length(diff);
         }
@@ -144,7 +144,7 @@ namespace Smpp {
         /// @brief Set the system type.
         /// @param p The new system type.
         void address_range(const Smpp::Char* p) {
-            int diff = strlen(p) - address_range_.length();
+            auto diff = strlen(p) - address_range_.length();
             address_range_ = p;
             Header::update_length(diff);
         }

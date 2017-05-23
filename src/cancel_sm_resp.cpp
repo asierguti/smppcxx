@@ -27,7 +27,7 @@ Smpp::CancelSmResp::CancelSmResp() :
     Response(CommandLength(MinLength),
               CommandId(CommandId::CancelSmResp),
               CommandStatus(CommandStatus::ESME_ROK),
-              SequenceNumber::Min)
+              SequenceNumber(SequenceNumber::Min))
 {
 }
 
@@ -49,13 +49,9 @@ Smpp::CancelSmResp::CancelSmResp(const Smpp::Uint8* b) :
     Response(CommandLength(MinLength),
               CommandId(CommandId::CancelSmResp),
               CommandStatus(CommandStatus::ESME_ROK),
-              1)
+              SequenceNumber(1))
 {
     decode(b);
-}
-
-Smpp::CancelSmResp::~CancelSmResp()
-{
 }
 
 /// @brief Encode the message into an octet array.
@@ -78,11 +74,12 @@ Smpp::CancelSmResp::decode(const Smpp::Uint8* buff)
 {
     Response::decode(buff);
 
-    Smpp::Uint32 len = Response::command_length();
+    auto len = Response::command_length();
     Smpp::Uint32 offset = 16;
     const char* err = "Bad length in cancel_sm_resp";
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
  
     Header::decode_tlvs(buff + offset, len - offset);
 }

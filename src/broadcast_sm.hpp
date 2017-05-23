@@ -55,12 +55,12 @@ namespace Smpp {
         
         /** @brief Constructor requiring all mandatory parameters. */
         BroadcastSm(const SequenceNumber& sequenceNumber,
-                     const ServiceType& serviceType,
-                     const SmeAddress& sourceAddr,
-                     const MessageId& messageId,
+                     ServiceType&& serviceType,
+                     SmeAddress&& sourceAddr,
+                     MessageId&& messageId,
                      const PriorityFlag& priorityFlag,
-                     const Smpp::Time& scheduleDeliveryTime,
-                     const Smpp::Time& validityPeriod,
+                     Smpp::Time&& scheduleDeliveryTime,
+                     Smpp::Time&& validityPeriod,
                      const ReplaceIfPresentFlag& replaceIfPresentFlag,
                      const DataCoding& dataCoding,
                      const SmDefaultMsgId& smDefaultMsgId,
@@ -73,7 +73,7 @@ namespace Smpp {
         BroadcastSm(const Smpp::Uint8* b);
 
         /// @brief Destructor - does nothing.
-        ~BroadcastSm();
+        ~BroadcastSm() = default;
         
         //
         // Mutating
@@ -82,7 +82,7 @@ namespace Smpp {
         /// @brief Set the service type.
         /// @param p The new service type.
         void service_type(const ServiceType& p) {
-            int diff = p.length() - service_type_.length();
+            auto diff = p.length() - service_type_.length();
             service_type_ = p;
             Header::update_length(diff);
         }
@@ -90,7 +90,7 @@ namespace Smpp {
         /// @brief Set the service type.
         /// @param p The new service type.
         void service_type(const Smpp::Char* p) {
-            int diff = strlen(p) - service_type_.length();
+            auto diff = strlen(p) - service_type_.length();
             service_type_ = p;
             Header::update_length(diff);
         }
@@ -98,7 +98,7 @@ namespace Smpp {
         /// @brief Set the source address using an SmeAddress object.
         /// @param p The new source address.
         void source_addr(const SmeAddress& p) {
-            int diff = p.address().length() - source_addr_.address().length();
+            auto diff = p.address().length() - source_addr_.address().length();
             source_addr_ = p;
             Header::update_length(diff);
         }
@@ -106,7 +106,7 @@ namespace Smpp {
         /// @brief Set the source address using just the address.
         /// @param p The source address characters.
         void source_addr(const Address& p) {
-            int diff = p.length() - source_addr_.address().length();
+            auto diff = p.length() - source_addr_.address().length();
             source_addr_ = SmeAddress(Smpp::Ton(Smpp::Ton::Unknown),
                                        Smpp::Npi(Smpp::Npi::Unknown),
                                        p);
@@ -116,7 +116,7 @@ namespace Smpp {
         /// @brief Sets the message id.
         /// @param p The message id.
         void message_id(const MessageId& p) {
-            int diff = p.length() - message_id_.length();
+            auto diff = p.length() - message_id_.length();
             message_id_ = p;
             Header::update_length(diff);
         }
@@ -124,7 +124,7 @@ namespace Smpp {
         /// @brief Sets the message id.
         /// @param p The message id.
         void message_id(const Smpp::Char* p) {
-            int diff = strlen(p) - message_id_.length();
+            auto diff = strlen(p) - message_id_.length();
             message_id_ = p;
             Header::update_length(diff);
         }
@@ -136,7 +136,7 @@ namespace Smpp {
         /// @brief Set the schedule delivery time.
         /// @param p The new schedule delivery time.
         void schedule_delivery_time(const Time& p) {
-            int diff = p.length() - schedule_delivery_time_.length();
+            auto diff = p.length() - schedule_delivery_time_.length();
             schedule_delivery_time_ = p;
             Header::update_length(diff);
         }
@@ -144,7 +144,7 @@ namespace Smpp {
         /// @brief Set the schedule delivery time.
         /// @param p The new schedule delivery time.
         void schedule_delivery_time(const Smpp::Char* p) {
-            int diff = strlen(p) - schedule_delivery_time_.length();
+            auto diff = strlen(p) - schedule_delivery_time_.length();
             schedule_delivery_time_ = p;
             Header::update_length(diff);
         }
@@ -152,7 +152,7 @@ namespace Smpp {
         /// @brief Set the validity period.
         /// @param p The new validity period.
         void validity_period(const Time& p) {
-            int diff = p.length() - validity_period_.length();
+            auto diff = p.length() - validity_period_.length();
             validity_period_ = p;
             Header::update_length(diff);
         }
@@ -160,7 +160,7 @@ namespace Smpp {
         /// @brief Set the validity period.
         /// @param p The new validity period.
         void validity_period(const Smpp::Char* p) {
-            int diff = strlen(p) - validity_period_.length();
+            auto diff = strlen(p) - validity_period_.length();
             validity_period_ = p;
             Header::update_length(diff);
         }
@@ -202,10 +202,10 @@ namespace Smpp {
         /// @param p The new broadcast repeat number.
         void broadcast_rep_num(const Smpp::Uint16& p) {
             remove_tlv(Tlv::broadcast_rep_num);
-            Smpp::Uint16 i = Smpp::hton16(p);
+            auto i = Smpp::hton16(p);
             const Tlv* tlv = new Tlv(
                     Tlv::broadcast_rep_num, 2, reinterpret_cast<Uint8*>(&i));
-            this->insert_after_tlv(tlv, Tlv::broadcast_content_type);
+            insert_after_tlv(tlv, Tlv::broadcast_content_type);
         }
 
         /// @brief Set the broadcast frequency interval.
@@ -213,7 +213,7 @@ namespace Smpp {
         void broadcast_frequency_interval(const BroadcastFrequencyInterval& p)
         {
             remove_tlv(Tlv::broadcast_frequency_interval);
-            this->insert_after_tlv(new Tlv(p), Tlv::broadcast_rep_num);
+            insert_after_tlv(new Tlv(p), Tlv::broadcast_rep_num);
         }
        
         // 

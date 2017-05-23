@@ -26,7 +26,7 @@
 Smpp::BindTransmitter::BindTransmitter() :
     Request(CommandLength(MinLength), 
     CommandId(CommandId::BindTransmitter), 
-    SequenceNumber::Min)
+    SequenceNumber(SequenceNumber::Min))
 {
 }
 
@@ -41,13 +41,13 @@ Smpp::BindTransmitter::BindTransmitter() :
 /// @param addressRange The address range to use.
 Smpp::BindTransmitter::BindTransmitter(
         const SequenceNumber& sequenceNumber,
-        const SystemId& systemId,
-        const Password& password,
-        const SystemType& systemType,
+        SystemId&& systemId,
+        Password&& password,
+        SystemType&& systemType,
         const InterfaceVersion& interfaceVersion,
         const Ton& addrTon,
         const Npi& addrNpi,
-        const AddressRange& addressRange) :
+        AddressRange&& addressRange) :
     Request(CommandLength(MinLength), 
              CommandId(CommandId::BindTransmitter), 
              sequenceNumber),
@@ -70,13 +70,9 @@ Smpp::BindTransmitter::BindTransmitter(
 Smpp::BindTransmitter::BindTransmitter(const Smpp::Uint8* b) :
     Request(CommandLength(MinLength),
     CommandId(CommandId::BindTransmitter),
-    1)
+    SequenceNumber(1))
 {
     decode(b);
-}
-
-Smpp::BindTransmitter::~BindTransmitter()
-{
 }
 
 /// @brief Encode the message into an octet array.
@@ -109,28 +105,32 @@ Smpp::BindTransmitter::decode(const Smpp::Uint8* buff)
 {
     Request::decode(buff);
 
-    Smpp::Uint32 len = Request::command_length();
+    auto len = Request::command_length();
     Smpp::Uint32 offset = 16;
     const char* err = "Invalid bind PDU length";
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
  
-    const Smpp::Char* sptr = reinterpret_cast<const Smpp::Char*>(buff);
+    const auto sptr = reinterpret_cast<const Smpp::Char*>(buff);
 
     system_id_ = &sptr[offset];
     offset += system_id_.length() + 1;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     password_ = &sptr[offset];
     offset += password_.length() + 1;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     system_type_ = &sptr[offset];
     offset += system_type_.length() + 1;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     interface_version_ = buff[offset];
     ++offset;
@@ -143,8 +143,9 @@ Smpp::BindTransmitter::decode(const Smpp::Uint8* buff)
    
     address_range_ = &sptr[offset];
     offset += address_range_.length() + 1;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     Header::decode_tlvs(buff + offset, len - offset);
 }

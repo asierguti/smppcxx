@@ -39,10 +39,6 @@ Smpp::Header::Header(const CommandLength& commandLength,
 {
 }
 
-Smpp::Header::~Header()
-{
-}
-
 /// @brief Decode octets into tlv objects.
 /// @param b The buffer to decode (start of the tlv)
 /// @param len The number of octets left in the buffer.
@@ -51,8 +47,9 @@ Smpp::Header::decode_tlvs(const Smpp::Uint8* b, Smpp::Uint32 len)
 {
     while(len > 0) {
         // should be enough bytes for tag and length.
-        if(len < 4)
+        if(len < 4) {
             throw Smpp::Error("Invalid command_length");
+        }
 
 	// decode the TLV tag
         Smpp::Uint16 tag;
@@ -69,8 +66,9 @@ Smpp::Header::decode_tlvs(const Smpp::Uint8* b, Smpp::Uint32 len)
         len -= 2;
      
         // should be enough bytes for the TLV value.
-        if(len < length)
+        if(len < length) {
             throw Smpp::Error("Invalid command_length");
+        }
 
         tlvs_.list_.push_back(new Tlv(tag, length, b));
         b += length;
@@ -88,8 +86,9 @@ Smpp::Header::insert_after_tlv(const Tlv* tlv, Smpp::Uint16 tag)
     TlvList::reverse_iterator i;
     i = std::find_if(tlvs_.list_.rbegin(), tlvs_.list_.rend(),
                      Tlv::CompareTag(tag));
-    if(i == tlvs_.list_.rend())
+    if(i == tlvs_.list_.rend()) {
         throw Smpp::Error("Missing mandatory TLV");
+    }
             
     tlvs_.list_.insert(i.base(), tlv);
     update_length(tlv->length() + 4);
@@ -102,11 +101,11 @@ Smpp::Header::insert_after_tlv(const Tlv* tlv, Smpp::Uint16 tag)
 void
 Smpp::Header::insert_before_tlv(const Tlv* tlv, Smpp::Uint16 tag)
 {
-    TlvList::iterator i;
-    i = std::find_if(tlvs_.list_.begin(), tlvs_.list_.end(),
+    auto i = std::find_if(tlvs_.list_.begin(), tlvs_.list_.end(),
                      Tlv::CompareTag(tag));
-    if(i == tlvs_.list_.end())
+    if(i == tlvs_.list_.end()) {
         throw Smpp::Error("Missing mandatory TLV");
+    }
     
     tlvs_.list_.insert(i, tlv);
     update_length(tlv->length() + 4);
@@ -121,7 +120,7 @@ Smpp::Request::Request(
         const CommandLength& commandLength,
         const CommandId& commandID,
         const SequenceNumber& sequenceNumber) : 
-    Header(commandLength, commandID, CommandStatus::ESME_ROK, sequenceNumber)
+    Header(commandLength, commandID, CommandStatus(CommandStatus::ESME_ROK), sequenceNumber)
 {
 }
 

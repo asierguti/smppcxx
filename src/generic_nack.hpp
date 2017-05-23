@@ -47,7 +47,7 @@ namespace Smpp {
         GenericNack(const Smpp::Uint8* b);
 
         /// @brief Destructor - does nothing.
-        ~GenericNack();
+        ~GenericNack() = default;
         
         /// @brief Serialize the PDU.
         /// @note The length is taken from the command_length().

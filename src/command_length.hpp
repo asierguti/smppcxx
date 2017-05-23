@@ -28,18 +28,23 @@ namespace Smpp {
 
     class CommandLength {
         Smpp::Uint32 val_;
-        CommandLength();
     public:
+
+        CommandLength() = delete;
         
-        CommandLength(const Smpp::Uint32& p) : val_(p) {}
+        explicit CommandLength(const Smpp::Uint32& p) : val_(p) {}
         CommandLength& operator+=(int i) { val_ += i; return *this; }
             
-        operator Smpp::Uint32() const { return val_; }
+        explicit operator Smpp::Uint32() const { return val_; }
 
         static Smpp::Uint32 decode(const Smpp::Char* buff) {
             Smpp::Uint32 length;
             memcpy(&length, &buff[0], sizeof length);
             return Smpp::ntoh32(length);
+        }
+
+        Smpp::Uint32 getLength() const {
+            return val_;
         }
     };
 

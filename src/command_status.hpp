@@ -31,7 +31,6 @@ namespace Smpp {
      * @class CommandStatus
      */
     class CommandStatus {
-        CommandStatus();
         Smpp::Uint32 val_;
     public:
         /** Status code values */
@@ -108,7 +107,7 @@ namespace Smpp {
         /** @brief A brief description of the command status
          * @return A brief string description of the command status */
         inline static std::string description(const CommandStatus& p) {
-            switch(p) {
+            switch(static_cast <unsigned int> (p)) {
                 case ESME_ROK:
                     return "No Error";
                     break;
@@ -311,8 +310,10 @@ namespace Smpp {
                     return "Broadcast Channel Indicator is invalid";
                     break;
             }
-            if(p >= 0x00000400 && p <= 0x000004FF)
+            if(static_cast<unsigned int> (p) >= 0x00000400 && 
+                static_cast<unsigned int> (p) <= 0x000004FF) {
                 return "Reserved for MC vendor specific Errors";
+            }
 
             return "Reserved by SMPP";
         }
@@ -320,7 +321,7 @@ namespace Smpp {
         /** @brief A long description of a command status
          * @return A long description of a command status */
         inline static std::string long_description(const CommandStatus& p) {
-            switch(p) {
+            switch(static_cast <unsigned int> (p)) {
                 case ESME_ROK:
                     return "Specified in a response PDU to indicate the success of the corresponding request PDU.";
                     break;
@@ -523,20 +524,27 @@ namespace Smpp {
                     return "Specified value violates protocol or is unsupported.";
                     break;
             }
-            if(p >= 0x00000400 && p <= 0x000004FF)
+            if(static_cast<unsigned int> (p) >= 0x00000400 && 
+                static_cast<unsigned int> (p) <= 0x000004FF) {
                 return "Reserved for MC vendor specific Errors";
+            }
 
             return "Reserved by SMPP";
         }
 
+        CommandStatus() = delete;
 
-        CommandStatus(const Smpp::Uint32& p) : val_(p) {}
-        operator Smpp::Uint32() const { return val_; }
+        explicit CommandStatus(const Smpp::Uint32& p) : val_(p) {}
+        explicit operator Smpp::Uint32() const { return val_; }
 
         Smpp::Uint32 decode(const Smpp::Char* buff) {
             Smpp::Uint32 status;
             memcpy(&status, &buff[8], sizeof status);
             return Smpp::ntoh32(status);
+        }
+
+        Smpp::Uint32 getLength() const {
+            return val_;
         }
     };
 

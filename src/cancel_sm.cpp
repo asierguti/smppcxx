@@ -26,7 +26,7 @@
 Smpp::CancelSm::CancelSm() :
     Request(CommandLength(MinLength), 
     CommandId(CommandId::CancelSm), 
-    SequenceNumber::Min)
+    SequenceNumber(SequenceNumber::Min))
 {
 }
 
@@ -39,10 +39,10 @@ Smpp::CancelSm::CancelSm() :
 /// @param destinationAddr The destination address (ton, npi and address).
 Smpp::CancelSm::CancelSm(
         const SequenceNumber& sequenceNumber,
-        const ServiceType& serviceType,
-        const MessageId& messageId,
-        const SmeAddress& sourceAddr,
-        const SmeAddress& destinationAddr) :
+        ServiceType&& serviceType,
+        MessageId&& messageId,
+        SmeAddress&& sourceAddr,
+        SmeAddress&& destinationAddr) :
     Request(CommandLength(MinLength), 
              CommandId(CommandId::CancelSm), 
              sequenceNumber),
@@ -60,13 +60,9 @@ Smpp::CancelSm::CancelSm(
 /// @brief Construct from a buffer.
 /// @param b The buffer (octet array).
 Smpp::CancelSm::CancelSm(const Smpp::Uint8* b) :
-    Request(CommandLength(MinLength), CommandId(CommandId::CancelSm), 1)
+    Request(CommandLength(MinLength), CommandId(CommandId::CancelSm), SequenceNumber(1))
 {
     decode(b);
-}
-
-Smpp::CancelSm::~CancelSm()
-{
 }
 
 /// @brief Encode the message into an octet array.
@@ -96,32 +92,38 @@ Smpp::CancelSm::decode(const Smpp::Uint8* buff)
 {
     Request::decode(buff);
 
-    Smpp::Uint32 len = Request::command_length();
+    auto len = Request::command_length();
     Smpp::Uint32 offset = 16;
     const char* err = "Bad length in cancel_sm";
-    if(len < offset) throw Error(err);
+    if(len < offset) {
+        throw Error(err);
+    }
  
-    const Smpp::Char* sptr = reinterpret_cast<const Smpp::Char*>(buff);
+    const auto sptr = reinterpret_cast<const Smpp::Char*>(buff);
 
     service_type_ = &sptr[offset];
     offset += service_type_.length() + 1;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     message_id_ = &sptr[offset];
     offset += message_id_.length() + 1;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     source_addr_.decode(buff+offset, len - offset);
     offset += source_addr_.address().length() + 3; // ton + npi + '\0'
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     destination_addr_.decode(buff+offset, len - offset);
     offset += destination_addr_.address().length() + 3; // ton + npi + '\0'
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     Header::decode_tlvs(buff + offset, len - offset);
 }

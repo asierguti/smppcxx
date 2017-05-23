@@ -28,7 +28,7 @@
 namespace Smpp {
     struct Error : public std::runtime_error {
         Error(const std::string& s);
-        ~Error() throw();
+        ~Error() = default;
     };
 }
 

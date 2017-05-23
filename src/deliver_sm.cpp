@@ -26,7 +26,7 @@
 Smpp::DeliverSm::DeliverSm() :
     Request(CommandLength(MinLength), 
     CommandId(CommandId::DeliverSm), 
-    SequenceNumber::Min)
+    SequenceNumber(SequenceNumber::Min))
 {
 }
 
@@ -48,19 +48,19 @@ Smpp::DeliverSm::DeliverSm() :
 /// @param shortMessage The short message to use, its length is sm_length.
 Smpp::DeliverSm::DeliverSm(
         const SequenceNumber& sequenceNumber,
-        const ServiceType& serviceType,
-        const SmeAddress& sourceAddr,
-        const SmeAddress& destinationAddr,
+        ServiceType&& serviceType,
+        SmeAddress&& sourceAddr,
+        SmeAddress&& destinationAddr,
         const EsmClass& esmClass,
         const ProtocolId& protocolId,
         const PriorityFlag& priorityFlag,
-        const Smpp::Time& scheduleDeliveryTime,
-        const Smpp::Time& validityPeriod,
+        Smpp::Time&& scheduleDeliveryTime,
+        Smpp::Time&& validityPeriod,
         const RegisteredDelivery& registeredDelivery,
         const ReplaceIfPresentFlag& replaceIfPresentFlag,
         const DataCoding& dataCoding,
         const SmDefaultMsgId& smDefaultMsgId,
-        const ShortMessage& shortMessage) :
+        ShortMessage&& shortMessage) :
     Request(CommandLength(MinLength), 
              CommandId(CommandId::DeliverSm), 
              sequenceNumber),
@@ -89,13 +89,9 @@ Smpp::DeliverSm::DeliverSm(
 /// @brief Construct from a buffer.
 /// @param b The buffer (octet array).
 Smpp::DeliverSm::DeliverSm(const Smpp::Uint8* b) :
-    Request(CommandLength(MinLength), CommandId(CommandId::DeliverSm), 1)
+    Request(CommandLength(MinLength), CommandId(CommandId::DeliverSm), SequenceNumber(1))
 {
     decode(b);
-}
-
-Smpp::DeliverSm::~DeliverSm()
-{
 }
 
 /// @brief Encode the message into an octet array.
@@ -134,78 +130,92 @@ Smpp::DeliverSm::decode(const Smpp::Uint8* buff)
 {
     Request::decode(buff);
 
-    Smpp::Uint32 len = Request::command_length();
+    auto len = Request::command_length();
     Smpp::Uint32 offset = 16;
     const char* err = "Bad length in deliver_sm";
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
  
-    const Smpp::Char* sptr = reinterpret_cast<const Smpp::Char*>(buff);
+    const auto sptr = reinterpret_cast<const Smpp::Char*>(buff);
 
     service_type_ = &sptr[offset];
     offset += service_type_.length() + 1;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     source_addr_.decode(buff+offset, len - offset);
     offset += source_addr_.address().length() + 3; // ton + npi + '\0'
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     destination_addr_.decode(buff+offset, len - offset);
     offset += destination_addr_.address().length() + 3; // ton + npi + '\0'
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     esm_class_ = buff[offset];
     ++offset;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
     
     protocol_id_ = buff[offset];
     ++offset;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
     
     priority_flag_ = buff[offset];
     ++offset;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
     
     schedule_delivery_time_ = &sptr[offset];
     offset += schedule_delivery_time_.length() + 1;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
     
     validity_period_ = &sptr[offset];
     offset += validity_period_.length() + 1;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
     
     registered_delivery_ = buff[offset];
     ++offset;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
     
     replace_if_present_flag_ = buff[offset];
     ++offset;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
     
     data_coding_ = buff[offset];
     ++offset;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
     
     sm_default_msg_id_ = buff[offset];
     ++offset;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     short_message_ = buff+offset;
     offset += short_message_.length() + 1; // plus sm_length
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     Header::decode_tlvs(buff + offset, len - offset);
 }

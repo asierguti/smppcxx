@@ -27,7 +27,7 @@ Smpp::DataSmResp::DataSmResp() :
     Response(CommandLength(MinLength), 
               CommandId(CommandId::DataSmResp), 
               CommandStatus(CommandStatus::ESME_ROK),
-              SequenceNumber::Min)
+              SequenceNumber(SequenceNumber::Min))
 {
 }
 
@@ -38,7 +38,7 @@ Smpp::DataSmResp::DataSmResp() :
 Smpp::DataSmResp::DataSmResp(
         const CommandStatus& commandStatus,
         const SequenceNumber& sequenceNumber,
-        const MessageId& messageId) :
+        MessageId&& messageId) :
     Response(CommandLength(MinLength), 
               CommandId(CommandId::DataSmResp), 
               commandStatus,
@@ -54,13 +54,9 @@ Smpp::DataSmResp::DataSmResp(const Smpp::Uint8* b) :
     Response(CommandLength(MinLength),
               CommandId(CommandId::DataSmResp),
               CommandStatus(CommandStatus::ESME_ROK),
-              1)
+              SequenceNumber(1))
 {
     decode(b);
-}
-
-Smpp::DataSmResp::~DataSmResp()
-{
 }
 
 /// @brief Encode the message into an octet array.
@@ -87,18 +83,20 @@ Smpp::DataSmResp::decode(const Smpp::Uint8* buff)
 {
     Response::decode(buff);
 
-    Smpp::Uint32 len = Response::command_length();
+    auto len = Response::command_length();
     Smpp::Uint32 offset = 16;
     const char* err = "Bad length in data_sm_resp";
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
  
-    const Smpp::Char* sptr = reinterpret_cast<const Smpp::Char*>(buff);
+    const auto sptr = reinterpret_cast<const Smpp::Char*>(buff);
     message_id_ = &sptr[offset];
     offset += message_id_.length() + 1;
     
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     Header::decode_tlvs(buff + offset, len - offset);
 }

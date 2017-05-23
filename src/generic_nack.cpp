@@ -27,7 +27,7 @@ Smpp::GenericNack::GenericNack() :
     Response(CommandLength(MinLength),
               CommandId(CommandId::GenericNack),
               CommandStatus(CommandStatus::ESME_ROK),
-              SequenceNumber::Min)
+              SequenceNumber(SequenceNumber::Min))
 {
 }
 
@@ -49,13 +49,9 @@ Smpp::GenericNack::GenericNack(const Smpp::Uint8* b) :
     Response(CommandLength(MinLength),
               CommandId(CommandId::GenericNack),
               CommandStatus(CommandStatus::ESME_ROK),
-              1)
+              SequenceNumber(1))
 {
     decode(b);
-}
-
-Smpp::GenericNack::~GenericNack()
-{
 }
 
 /// @brief Encode the message into an octet array.
@@ -78,12 +74,13 @@ Smpp::GenericNack::decode(const Smpp::Uint8* buff)
 {
     Response::decode(buff);
 
-    Smpp::Uint32 len = Response::command_length();
+    auto len = Response::command_length();
     Smpp::Uint32 offset = 16;
     const char* err = "Bad length in generic_nack";
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
- 
+    }
+
     Header::decode_tlvs(buff + offset, len - offset);
 }
 

@@ -23,8 +23,3 @@
 Smpp::Error::Error(const std::string& s) : std::runtime_error(s)
 {
 }
-
-Smpp::Error::~Error() throw()
-{
-}
-

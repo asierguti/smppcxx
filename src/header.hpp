@@ -6,12 +6,12 @@
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -70,40 +70,37 @@ namespace Smpp {
             TlvList list_;
 
             CTlvList() {}
-            ~CTlvList() throw() {
+            ~CTlvList() {
                 std::for_each(list_.begin(), list_.end(), Delete());
             }
-           
+
             /// @brief Copy constructor
             /// @param t List to copy
             CTlvList(const CTlvList& t) {
                 std::transform(t.list_.begin(), t.list_.end(),
                         std::back_inserter(list_),
-                        Copy()); 
+                        Copy());
             }
 
-            CTlvList& operator=(const CTlvList& t) {
-                if(this == &t) return *this;
-                std::transform(t.list_.begin(), t.list_.end(),
-                        std::back_inserter(list_),
-                        Copy()); 
+            CTlvList& operator=(CTlvList t) {
+                std::swap (list_, t.list_);
                 return *this;
             }
         } tlvs_;
-        
+
       protected:
         /** @brief Header constructor */
-        Header(const CommandLength& commandLength, 
-                const CommandId& commandID, 
-                const CommandStatus& commandStatus, 
+        Header(const CommandLength& commandLength,
+                const CommandId& commandID,
+                const CommandStatus& commandStatus,
                 const SequenceNumber& sequenceNumber);
 
         /** @brief Allows the command length to be set by a derived class.
          * @param p The new command length.  */
-        void command_length(const Smpp::Uint32& p) { command_length_ = p; }
+        void command_length(const Smpp::Uint32& p) { command_length_ = CommandLength(p); }
 
         void update_length(const int& p) { command_length_ += p; }
-        
+
         /// @brief A helper function to access the commmand status.
         /// @return Command status.
         const CommandStatus& get_command_status(void) const {
@@ -119,10 +116,10 @@ namespace Smpp {
         /// @brief Writes the header to the Buffer
         /// @param b The Smpp::Buffer
         void encode(Smpp::Buffer& b) const {
-            b += Smpp::hton32(command_length_);
-            b += Smpp::hton32(command_id_);
-            b += Smpp::hton32(command_status_);
-            b += Smpp::hton32(sequence_number_);
+            b += Smpp::hton32(command_length_.getLength());
+            b += Smpp::hton32(command_id_.getLength());
+            b += Smpp::hton32(command_status_.getLength());
+            b += Smpp::hton32(sequence_number_.getLength());
         }
 
         /// @brief Reads from the array b in to the header parameters
@@ -130,12 +127,12 @@ namespace Smpp {
         void decode(const Smpp::Uint8* buff) {
             const Smpp::Uint32* p = reinterpret_cast<const Smpp::Uint32*>(buff);
             Smpp::Uint32 t;
-            memcpy(&t, p, 4); command_length_ = Smpp::ntoh32(t);
+            memcpy(&t, p, 4); command_length_ = CommandLength(Smpp::ntoh32(t));
             memcpy(&t, p+1, 4); command_id_ = Smpp::ntoh32(t);
-            memcpy(&t, p+2, 4); command_status_ = Smpp::ntoh32(t);
-            memcpy(&t, p+3, 4); sequence_number_ = Smpp::ntoh32(t);
+            memcpy(&t, p+2, 4); command_status_ = CommandStatus(Smpp::ntoh32(t));
+            memcpy(&t, p+3, 4); sequence_number_ = SequenceNumber(Smpp::ntoh32(t));
         }
-            
+
         /// @brief Encode the contents of the tlvs_.list_ into the Buffer.
         void encode_tlvs(Smpp::Buffer& b)
         {
@@ -144,7 +141,7 @@ namespace Smpp {
         }
 
         /// @brief Decode octets into tlv objects.
-        void decode_tlvs(const Smpp::Uint8* b, Smpp::Uint32 l);
+        void decode_tlvs(const Smpp::Uint8* b, Smpp::Uint32 len);
 
 	/// @brief Insert a TLV.
 	/// @param tlv The TLV to insert.
@@ -152,7 +149,7 @@ namespace Smpp {
             tlvs_.list_.push_back(tlv);
             update_length(tlv->length() + 4);
         }
-        
+
         /// @brief Insert a TLV after the last occurance of another TLV.
         void insert_after_tlv(const Tlv* tlv, Smpp::Uint16 tag);
 
@@ -160,32 +157,32 @@ namespace Smpp {
         void insert_before_tlv(const Tlv* tlv, Smpp::Uint16 tag);
 
       public:
-        virtual ~Header();
-        
+        virtual ~Header() = default;
+
         /* Accessing */
 
         /// @brief Accesses the subclasses command length.
         /// @return Command length.
-        Smpp::Uint32 command_length() const { return command_length_; }
+        Smpp::Uint32 command_length() const { return command_length_.getLength(); }
 
         /// @brief Accesses the subclasses command id
         /// @return Command Id
-        Smpp::Uint32 command_id() const { return command_id_; }
+        Smpp::Uint32 command_id() const { return command_id_.getLength(); }
 
         /// @brief Accesses the subclasses sequence number
         /// @return Sequence number
-        Smpp::Uint32 sequence_number() const { return sequence_number_; }
-       
+        Smpp::Uint32 sequence_number() const { return sequence_number_.getLength(); }
+
         /* Mutating */
 
         /// @brief Mutates the subclasses sequence number
         /// @param p The new sequence number
-        /// @param allow_0 Optional parameter that when set to true allows a 
+        /// @param allow_0 Optional parameter that when set to true allows a
         ///                sequence number 0 to be set, the default is false. */
         void sequence_number(const Smpp::Uint32& p, bool allow_0 = false) {
             sequence_number_ = SequenceNumber(p, allow_0);
         }
-        
+
         /* Access to command_status is dependant on message type.
          * That is a request or a response. */
         virtual Smpp::Uint32 command_status() const = 0;
@@ -204,7 +201,7 @@ namespace Smpp {
         {
             insert_tlv(new Tlv(t, 1, &v));
         }
-        
+
         /// @brief Insert a TLV containing a 16 bit integer.
         /// @param t The TLV tag.
         /// @param v The integer to insert in host byte order.
@@ -213,7 +210,7 @@ namespace Smpp {
             Smpp::Uint16 i = Smpp::hton16(v);
             insert_tlv(new Tlv(t, 2, reinterpret_cast<Uint8*>(&i)));
         }
-        
+
         /// @brief Insert a TLV containing a 32 bit integer.
         /// @param t The TLV tag.
         /// @param v The integer to insert in host byte order.
@@ -222,7 +219,7 @@ namespace Smpp {
             Smpp::Uint32 i = Smpp::hton32(v);
             insert_tlv(new Tlv(t, 4, reinterpret_cast<Uint8*>(&i)));
         }
-        
+
         /// @brief Insert a TLV containing a C-String (NULL terminated)
         /// @param t The TLV tag.
         /// @param v The TLV null terminated c-string.
@@ -232,7 +229,7 @@ namespace Smpp {
                                 v.length()+1,
                                 reinterpret_cast<const Smpp::Uint8*>(v.data())));
         }
-        
+
         /// @brief Insert a TLV containing an array of octets.
         /// @param t The TLV tag.
         /// @param l The TLV octet length.
@@ -256,12 +253,12 @@ namespace Smpp {
             ListFinder(TlvList& l, Smpp::Uint16 tag) : l_(l), tag_(tag) {}
             void operator()(const Tlv* tlv) {
                 if(tlv->tag() == tag_)
-                    l_.push_back(tlv); 
+                    l_.push_back(tlv);
             }
 
             const TlvList& get_list() const { return l_; }
         };
-        
+
         /// @brief Access all TLVs with the same tag.
         /// @param tag The Tlv tag to access.
         /// @return List of Tlvs.
@@ -272,31 +269,28 @@ namespace Smpp {
             std::for_each(tlvs_.list_.begin(), tlvs_.list_.end(), t);
             return t.get_list();
         }
-        
+
         /// @brief Access a Tlv using its tag.
         /// @param tag The Tlv tag to access.
         /// @return Pointer to the the Tlv.
         /// @retval 0 If the Tlv is not found.
         const Tlv* find_tlv(Uint16 tag) const {
-            TlvList::const_iterator i =
+            auto i =
                 std::find_if(tlvs_.list_.begin(), tlvs_.list_.end(), Tlv::CompareTag(tag));
-            if(i == tlvs_.list_.end())
-                return 0;
 
-            return *i;
+            return (i == tlvs_.list_.end()) ? 0 : *i;
         }
-        
+
         /// @brief Remove all instances of a Tlv.
         /// @return The tag denoting the tlv(s) to be removed.
         void remove_tlv(Uint16 t)
         {
-            for(TlvList::iterator i =
-                 std::find_if(tlvs_.list_.begin(), tlvs_.list_.end(),
+            for(auto i = std::find_if(tlvs_.list_.begin(), tlvs_.list_.end(),
                               Tlv::CompareTag(t));
                  i != tlvs_.list_.end();
                  i = std::find_if(i, tlvs_.list_.end(), Tlv::CompareTag(t)))
             {
-                TlvList::iterator j = i;
+                auto j = i;
                 ++j;
                 const Tlv* t = *i;
                 tlvs_.list_.erase(i);
@@ -316,8 +310,8 @@ namespace Smpp {
         void command_status(const Smpp::Uint32& p) {}
       protected:
         /** @brief Constructor */
-        Request(const CommandLength& commandLength, 
-                 const CommandId& commandID, 
+        Request(const CommandLength& commandLength,
+                 const CommandId& commandID,
                  const SequenceNumber& sequenceNumber);
 
         /**
@@ -331,12 +325,12 @@ namespace Smpp {
          * @param b The array to read from
          */
         void decode(const Smpp::Uint8* b) { Header::decode(b); }
-        
+
       public:
 
         /** @brief Access to the command status.
          * @return Command status, should always be 0 for a request.  */
-        Smpp::Uint32 command_status() const { return Header::get_command_status(); }
+        Smpp::Uint32 command_status() const { return Header::get_command_status().getLength(); }
     };
 
     /** @class Response
@@ -344,7 +338,7 @@ namespace Smpp {
     class Response : public Header {
       protected:
         /** @brief Constructor for a response PDU.  */
-        Response(const CommandLength& commandLength, 
+        Response(const CommandLength& commandLength,
                   const CommandId& commandID,
                   const CommandStatus& commandStatus,
                   const SequenceNumber& sequenceNumber);
@@ -360,17 +354,17 @@ namespace Smpp {
          * @param b The array to read from
          */
         void decode(const Smpp::Uint8* b) { Header::decode(b); }
-        
+
       public:
         /** @brief Mutates the command status.  */
         void command_status(const Smpp::Uint32& p) {
-            Header::set_command_status(p);
+            Header::set_command_status(CommandStatus(p));
         }
-       
+
         /** @brief Accesses the command status.
          * @return The command status.  */
-        Smpp::Uint32 command_status() const { 
-            return Header::get_command_status();
+        Smpp::Uint32 command_status() const {
+            return Header::get_command_status().getLength();
         }
     };
 

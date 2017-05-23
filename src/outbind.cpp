@@ -6,12 +6,12 @@
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -24,9 +24,9 @@
 /// @brief Default constructor.
 /// @note Sets all parameters to their default values.
 Smpp::Outbind::Outbind() :
-    Request(CommandLength(MinLength), 
-    CommandId(CommandId::Outbind), 
-    SequenceNumber::Min)
+    Request(CommandLength(MinLength),
+    CommandId(CommandId::Outbind),
+    SequenceNumber(SequenceNumber::Min))
 {
 }
 
@@ -41,10 +41,10 @@ Smpp::Outbind::Outbind() :
 /// @param addressRange The address range to use.
 Smpp::Outbind::Outbind(
         const SequenceNumber& sequenceNumber,
-        const SystemId& systemId,
-        const Password& password) :
-    Request(CommandLength(MinLength), 
-             CommandId(CommandId::Outbind), 
+        SystemId&& systemId,
+        Password&& password) :
+    Request(CommandLength(MinLength),
+             CommandId(CommandId::Outbind),
              sequenceNumber),
     system_id_(systemId),
     password_(password)
@@ -58,13 +58,9 @@ Smpp::Outbind::Outbind(
 Smpp::Outbind::Outbind(const Smpp::Uint8* b) :
     Request(CommandLength(MinLength),
     CommandId(CommandId::Outbind),
-    1)
+    SequenceNumber(1))
 {
     decode(b);
-}
-
-Smpp::Outbind::~Outbind()
-{
 }
 
 /// @brief Encode the message into an octet array.
@@ -92,24 +88,26 @@ Smpp::Outbind::decode(const Smpp::Uint8* buff)
 {
     Request::decode(buff);
 
-    Smpp::Uint32 len = Request::command_length();
+    auto len = Request::command_length();
     Smpp::Uint32 offset = 16;
     const char* err = "Invalid outbind PDU length";
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
- 
-    const Smpp::Char* sptr = reinterpret_cast<const Smpp::Char*>(buff);
+    }
+
+    const auto sptr = reinterpret_cast<const Smpp::Char*>(buff);
 
     system_id_ = &sptr[offset];
     offset += system_id_.length() + 1;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     password_ = &sptr[offset];
     offset += password_.length() + 1;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     Header::decode_tlvs(buff + offset, len - offset);
 }
-

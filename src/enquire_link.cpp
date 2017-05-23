@@ -26,7 +26,7 @@
 Smpp::EnquireLink::EnquireLink() :
     Request(CommandLength(MinLength),
              CommandId(CommandId::EnquireLink),
-             SequenceNumber::Min)
+             SequenceNumber(SequenceNumber::Min))
 {
 }
 
@@ -45,13 +45,9 @@ Smpp::EnquireLink::EnquireLink(const SequenceNumber& sequenceNumber) :
 Smpp::EnquireLink::EnquireLink(const Smpp::Uint8* b) :
     Request(CommandLength(MinLength),
              CommandId(CommandId::EnquireLink),
-             1)
+             SequenceNumber(1))
 {
     decode(b);
-}
-
-Smpp::EnquireLink::~EnquireLink()
-{
 }
 
 /// @brief Encode the message into an octet array.
@@ -74,11 +70,12 @@ Smpp::EnquireLink::decode(const Smpp::Uint8* buff)
 {
     Request::decode(buff);
 
-    Smpp::Uint32 len = Request::command_length();
+    auto len = Request::command_length();
     Smpp::Uint32 offset = 16;
     const char* err = "Bad length in enquire_link";
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
  
     Header::decode_tlvs(buff + offset, len - offset);
 }

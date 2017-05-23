@@ -45,13 +45,13 @@ namespace Smpp {
         BindTransmitterResp(
                 const CommandStatus& commandStatus,
                 const SequenceNumber& sequenceNumber,
-                const SystemId& systemId);
+                SystemId&& systemId);
        
         /// @brief Construct from a buffer.
         BindTransmitterResp(const Smpp::Uint8* b);
 
         /// @brief Destructor - does nothing.
-        ~BindTransmitterResp();
+        ~BindTransmitterResp() = default;
         
         //
         // Mutating
@@ -60,7 +60,7 @@ namespace Smpp {
         /// @brief Sets the system id.
         /// @param p The system id.
         void system_id(const SystemId& p) {
-            int diff = p.length() - system_id_.length();
+            auto diff = p.length() - system_id_.length();
             system_id_ = p;
             Header::update_length(diff);
         }
@@ -68,7 +68,7 @@ namespace Smpp {
         /// @brief Sets the system id.
         /// @param p The system id.
         void system_id(const Smpp::Char* p) {
-            int diff = strlen(p) - system_id_.length();
+            auto diff = strlen(p) - system_id_.length();
             system_id_ = p;
             Header::update_length(diff);
         }

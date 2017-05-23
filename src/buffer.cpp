@@ -21,7 +21,7 @@
 #include "buffer.hpp"
 
 /// @brief Creates a non allocated buffer.
-Smpp::Buffer::Buffer() : data_(0), offset_(0)
+Smpp::Buffer::Buffer() : data_(nullptr), offset_(0)
 {
 }
 
@@ -34,8 +34,7 @@ Smpp::Buffer::Buffer(Uint32 len) : data_(new Smpp::Uint8[len]), offset_(0)
 /// @brief Destructor - destroys the buffer.
 Smpp::Buffer::~Buffer() throw()
 {
-    if(data_)
-        delete [] data_;
+    delete [] data_;
 }
 
 /// @brief Copies a submit_multi destination address to the buffer.
@@ -47,16 +46,14 @@ Smpp::CopySubmitMultiAddresses::operator()(const MultiDestinationAddressBase* p)
         case 0x01:
           {
             b_ += static_cast<Uint8>(0x01);
-            const SmeMultiAddress* addr =
-                                static_cast<const SmeMultiAddress*>(p);
+            const auto addr = static_cast<const SmeMultiAddress*>(p);
             b_ += addr->Value();
             break;
           }
         case 0x02:
           {
             b_ += static_cast<Uint8>(0x02);
-            const DistributionListAddress* addr =
-                        static_cast<const DistributionListAddress*>(p);
+            const auto addr = static_cast<const DistributionListAddress*>(p);
             b_ += addr->Value();
             break;
           }

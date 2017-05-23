@@ -26,11 +26,11 @@
 Smpp::BroadcastSm::BroadcastSm() :
     Request(CommandLength(MinLength), 
     CommandId(CommandId::BroadcastSm), 
-    SequenceNumber::Min),
+    SequenceNumber(SequenceNumber::Min)),
     defaultBroadcastAreaIdentifier_(true)
 {
     // The command_length is automatically updated
-    insert_tlv(BroadcastAreaIdentifier(0x00, 0, 0));
+    insert_tlv(BroadcastAreaIdentifier(0x00, nullptr, 0));
     insert_tlv(BroadcastContentType(0x00, 0x0000));
     insert_16bit_tlv(Smpp::Tlv::broadcast_rep_num, 0x0000);
     insert_tlv(BroadcastFrequencyInterval(0x00, 0x0000));
@@ -54,12 +54,12 @@ Smpp::BroadcastSm::BroadcastSm() :
 /// @param broadcastFrequencyInterval The broadcast_frequency_interval.
 Smpp::BroadcastSm::BroadcastSm(
         const SequenceNumber& sequenceNumber,
-        const ServiceType& serviceType,
-        const SmeAddress& sourceAddr,
-        const MessageId& messageId,
+        ServiceType&& serviceType,
+        SmeAddress&& sourceAddr,
+        MessageId&& messageId,
         const PriorityFlag& priorityFlag,
-        const Smpp::Time& scheduleDeliveryTime,
-        const Smpp::Time& validityPeriod,
+        Smpp::Time&& scheduleDeliveryTime,
+        Smpp::Time&& validityPeriod,
         const ReplaceIfPresentFlag& replaceIfPresentFlag,
         const DataCoding& dataCoding,
         const SmDefaultMsgId& smDefaultMsgId,
@@ -97,13 +97,9 @@ Smpp::BroadcastSm::BroadcastSm(
 /// @brief Construct from a buffer.
 /// @param b The buffer (octet array).
 Smpp::BroadcastSm::BroadcastSm(const Smpp::Uint8* b) :
-    Request(CommandLength(MinLength), CommandId(CommandId::BroadcastSm), 1)
+    Request(CommandLength(MinLength), CommandId(CommandId::BroadcastSm), SequenceNumber(1)), defaultBroadcastAreaIdentifier_(false)
 {
     decode(b);
-}
-
-Smpp::BroadcastSm::~BroadcastSm()
-{
 }
 
 /// @brief Encode the message into an octet array.
@@ -138,72 +134,85 @@ Smpp::BroadcastSm::decode(const Smpp::Uint8* buff)
 {
     Request::decode(buff);
 
-    Smpp::Uint32 len = Request::command_length();
+    auto len = Request::command_length();
     Smpp::Uint32 offset = 16;
     const char* err = "Bad length in broadcast_sm";
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
  
-    const Smpp::Char* sptr = reinterpret_cast<const Smpp::Char*>(buff);
+    const auto sptr = reinterpret_cast<const Smpp::Char*>(buff);
 
     service_type_ = sptr + offset;
     offset += service_type_.length() + 1;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     source_addr_.decode(buff+offset, len - offset);
     offset += source_addr_.address().length() + 3; // ton + npi + '\0'
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     message_id_ = sptr+offset;
     offset += message_id_.length() + 1;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     priority_flag_ = buff[offset];
     ++offset;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
     
     schedule_delivery_time_ = sptr + offset;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     offset += schedule_delivery_time_.length() + 1;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
     
     validity_period_ = sptr + offset;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     offset += validity_period_.length() + 1;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
     
     replace_if_present_flag_ = buff[offset];
     ++offset;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
     
     data_coding_ = buff[offset];
     ++offset;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
     
     sm_default_msg_id_ = buff[offset];
     ++offset;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
     
     Header::decode_tlvs(buff + offset, len - offset);
 
     // check mandatory TLVs are present (order is not important)
-    if(!find_tlv(Tlv::broadcast_area_identifier)     ||
-        !find_tlv(Tlv::broadcast_content_type)       ||
-        !find_tlv(Tlv::broadcast_rep_num)            ||
-        !find_tlv(Tlv::broadcast_frequency_interval))
+    if(find_tlv(Tlv::broadcast_area_identifier) == nullptr     ||
+        find_tlv(Tlv::broadcast_content_type) == nullptr      ||
+        find_tlv(Tlv::broadcast_rep_num) == nullptr           ||
+        find_tlv(Tlv::broadcast_frequency_interval) == nullptr) {
         throw Smpp::Error("Missing mandatory TLV parameter");
+    }
 }
 

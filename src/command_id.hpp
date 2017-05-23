@@ -29,7 +29,6 @@ namespace Smpp {
     /// @brief Defines a command id.
     class CommandId {
         Smpp::Uint32 val_;
-        CommandId(); // must be constructed with a command id
 
     public:
         enum {
@@ -68,6 +67,8 @@ namespace Smpp {
             CancelBroadcastSmResp = 0x80000113  /**< cancel_broadcast_sm_resp command id. */
         };
        
+        CommandId() = delete; // must be constructed with a command id
+
         /// @brief Constructor from a 32 bit integer
         /// @param p A command id
         explicit CommandId(const Smpp::Uint32& p) : val_(p) {}
@@ -78,7 +79,7 @@ namespace Smpp {
         
         /// @brief Conversion operator
         /// @return The command id value as a 32 bit integer.
-        operator Smpp::Uint32() const { return val_; }
+        explicit operator Smpp::Uint32() const { return val_; }
 
         /// @brief Extracts the command id from an encoded SMPP message.
         /// @param buff An SMPP encoded message.
@@ -88,6 +89,10 @@ namespace Smpp {
             
             memcpy(&id, &buff[4], sizeof id);
             return Smpp::ntoh32(id);
+        }
+
+        Smpp::Uint32 getLength() const {
+            return val_;
         }
     };
 

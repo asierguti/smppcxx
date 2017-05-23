@@ -27,7 +27,7 @@ Smpp::BindTransceiverResp::BindTransceiverResp() :
     Response(CommandLength(MinLength), 
     CommandId(CommandId::BindTransceiverResp),
     CommandStatus(CommandStatus::ESME_ROK),
-    SequenceNumber::Min)
+    SequenceNumber(SequenceNumber::Min))
 {
 }
 
@@ -38,7 +38,7 @@ Smpp::BindTransceiverResp::BindTransceiverResp() :
 Smpp::BindTransceiverResp::BindTransceiverResp(
         const CommandStatus& commandStatus,
         const SequenceNumber& sequenceNumber,
-        const SystemId& systemId) :
+        SystemId&& systemId) :
     Response(CommandLength(MinLength), 
              CommandId(CommandId::BindTransceiverResp), 
              commandStatus,
@@ -54,13 +54,9 @@ Smpp::BindTransceiverResp::BindTransceiverResp(const Smpp::Uint8* b) :
     Response(CommandLength(MinLength),
               CommandId(CommandId::BindTransceiverResp),
               CommandStatus(CommandStatus::ESME_ROK),
-              1)
+              SequenceNumber(1))
 {
     decode(b);
-}
-
-Smpp::BindTransceiverResp::~BindTransceiverResp()
-{
 }
 
 /// @brief Encode the message into an octet array.
@@ -90,15 +86,17 @@ Smpp::BindTransceiverResp::decode(const Smpp::Uint8* buff)
     Smpp::Uint32 len = Response::command_length();
     Smpp::Uint32 offset = 16;
     const char* err = "Bad length in bind_transceiver_resp";
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
  
-    const Smpp::Char* sptr = reinterpret_cast<const Smpp::Char*>(buff);
+    const auto sptr = reinterpret_cast<const Smpp::Char*>(buff);
     system_id_ = &sptr[offset];
     offset += system_id_.length() + 1;
     
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     Header::decode_tlvs(buff + offset, len - offset);
 }

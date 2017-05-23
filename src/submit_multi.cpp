@@ -6,12 +6,12 @@
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -24,9 +24,9 @@
 /// @brief Default constructor.
 /// @note Sets all parameters to their default values.
 Smpp::SubmitMulti::SubmitMulti() :
-    Request(CommandLength(MinLength), 
-    CommandId(CommandId::SubmitMulti), 
-    SequenceNumber::Min)
+    Request(CommandLength(MinLength),
+    CommandId(CommandId::SubmitMulti),
+    SequenceNumber(SequenceNumber::Min))
 {
 }
 
@@ -48,20 +48,20 @@ Smpp::SubmitMulti::SubmitMulti() :
 /// @param shortMessage The short message to use, its length is sm_length.
 Smpp::SubmitMulti::SubmitMulti(
         const SequenceNumber& sequenceNumber,
-        const ServiceType& serviceType,
-        const SmeAddress& sourceAddr,
+        ServiceType&& serviceType,
+        SmeAddress&& sourceAddr,
         const EsmClass& esmClass,
         const ProtocolId& protocolId,
         const PriorityFlag& priorityFlag,
-        const Smpp::Time& scheduleDeliveryTime,
-        const Smpp::Time& validityPeriod,
+        Smpp::Time&& scheduleDeliveryTime,
+        Smpp::Time&& validityPeriod,
         const RegisteredDelivery& registeredDelivery,
         const ReplaceIfPresentFlag& replaceIfPresentFlag,
         const DataCoding& dataCoding,
         const SmDefaultMsgId& smDefaultMsgId,
-        const ShortMessage& shortMessage) :
-    Request(CommandLength(MinLength), 
-             CommandId(CommandId::SubmitMulti), 
+        ShortMessage&& shortMessage) :
+    Request(CommandLength(MinLength),
+             CommandId(CommandId::SubmitMulti),
              sequenceNumber),
     service_type_(serviceType),
     source_addr_(sourceAddr),
@@ -86,13 +86,9 @@ Smpp::SubmitMulti::SubmitMulti(
 /// @brief Construct from a buffer.
 /// @param b The buffer (octet array).
 Smpp::SubmitMulti::SubmitMulti(const Smpp::Uint8* b) :
-    Request(CommandLength(MinLength), CommandId(CommandId::SubmitMulti), 1)
+    Request(CommandLength(MinLength), CommandId(CommandId::SubmitMulti), SequenceNumber(1))
 {
     decode(b);
-}
-
-Smpp::SubmitMulti::~SubmitMulti()
-{
 }
 
 /// @brief Encode the message into an octet array.
@@ -134,82 +130,98 @@ Smpp::SubmitMulti::decode(const Smpp::Uint8* buff)
     Smpp::Uint32 len = Request::command_length();
     Smpp::Uint32 offset = 16;
     const char* err = "Invalid command_length";
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
- 
+    }
+
     // cast to Smpp::Char*
-    const Smpp::Char* sptr = reinterpret_cast<const Smpp::Char*>(buff);
-    
-    service_type_ = (const Smpp::Char*)&sptr[offset];
+    const auto sptr = reinterpret_cast<const Smpp::Char*>(buff);
+
+    service_type_ = static_cast<const Smpp::Char*> (&sptr[offset]);
     offset += service_type_.length() + 1;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     source_addr_.decode(buff+offset, len - offset);
     offset += source_addr_.address().length() + 3; // ton + npi + '\0'
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     destination_addr_.decode(buff+offset, len - offset);
     offset += destination_addr_.octet_count();
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     esm_class_ = buff[offset];
     ++offset;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
-    
+    }
+
     protocol_id_ = buff[offset];
     ++offset;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
-    
+    }
+
     priority_flag_ = buff[offset];
     ++offset;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
-    
+    }
+
     schedule_delivery_time_ = &sptr[offset];
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
-    
+    }
+
     offset += schedule_delivery_time_.length() + 1;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
-    
+    }
+
     validity_period_ = &sptr[offset];
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
-    
+    }
+
     offset += validity_period_.length() + 1;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
-    
+    }
+
     registered_delivery_ = buff[offset];
     ++offset;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
-    
+    }
+
     replace_if_present_flag_ = buff[offset];
     ++offset;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
-    
+    }
+
     data_coding_ = buff[offset];
     ++offset;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
-    
+    }
+
     sm_default_msg_id_ = buff[offset];
     ++offset;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
-    
+    }
+
     short_message_ = buff+offset;
     offset += short_message_.length() + 1; // plus sm_length
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     Header::decode_tlvs(buff + offset, len - offset);
 }

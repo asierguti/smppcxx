@@ -49,9 +49,9 @@ namespace Smpp {
         /** @brief Constructor requiring all mandatory parameters. */
         DataSm(
                 const SequenceNumber& sequenceNumber,
-                const ServiceType& serviceType,
-                const SmeAddress& sourceAddr,
-                const SmeAddress& destinationAddr,
+                ServiceType&& serviceType,
+                SmeAddress&& sourceAddr,
+                SmeAddress&& destinationAddr,
                 const EsmClass& esmClass,
                 const RegisteredDelivery& registeredDelivery,
                 const DataCoding& dataCoding);
@@ -60,7 +60,7 @@ namespace Smpp {
         DataSm(const Smpp::Uint8* b);
 
         /// @brief Destructor - does nothing.
-        ~DataSm();
+        ~DataSm() = default;
         
         //
         // Mutating
@@ -69,7 +69,7 @@ namespace Smpp {
         /// @brief Set the service type.
         /// @param p The new service type.
         void service_type(const ServiceType& p) {
-            int diff = p.length() - service_type_.length();
+            auto diff = p.length() - service_type_.length();
             service_type_ = p;
             Header::update_length(diff);
         }
@@ -78,7 +78,7 @@ namespace Smpp {
         /// @brief Set the service type.
         /// @param p The new service type.
         void service_type(const Smpp::Char* p) {
-            int diff = strlen(p) - service_type_.length();
+            auto diff = strlen(p) - service_type_.length();
             service_type_ = p;
             Header::update_length(diff);
         }
@@ -86,7 +86,7 @@ namespace Smpp {
         /// @brief Set the source address using an SmeAddress object.
         /// @param p The new source address.
         void source_addr(const SmeAddress& p) {
-            int diff = p.address().length() - source_addr_.address().length();
+            auto diff = p.address().length() - source_addr_.address().length();
             source_addr_ = p;
             Header::update_length(diff);
         }
@@ -94,7 +94,7 @@ namespace Smpp {
         /// @brief Set the source address using just the address.
         /// @param p The source address characters.
         void source_addr(const Address& p) {
-            int diff = p.length() - source_addr_.address().length();
+            auto diff = p.length() - source_addr_.address().length();
             source_addr_ = SmeAddress(Smpp::Ton(Smpp::Ton::Unknown),
                                        Smpp::Npi(Smpp::Npi::Unknown),
                                        p,
@@ -105,7 +105,7 @@ namespace Smpp {
         /// @brief Set the destination address using an SmeAddress object.
         /// @param p The new destination address.
         void destination_addr(const SmeAddress& p) {
-            int diff =
+            auto diff =
                 p.address().length() - destination_addr_.address().length();
             destination_addr_ = p;
             Header::update_length(diff);
@@ -114,7 +114,7 @@ namespace Smpp {
         /// @brief Set the destination address using just the address.
         /// @param p The destination address characters.
         void destination_addr(const Address& p) {
-            int diff = p.length() - destination_addr_.address().length();
+            auto diff = p.length() - destination_addr_.address().length();
             destination_addr_ = SmeAddress(Smpp::Ton(Smpp::Ton::Unknown),
                                             Smpp::Npi(Smpp::Npi::Unknown),
                                             p,

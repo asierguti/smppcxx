@@ -6,12 +6,12 @@
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -26,7 +26,7 @@
 Smpp::Unbind::Unbind() :
     Request(CommandLength(MinLength),
              CommandId(CommandId::Unbind),
-             SequenceNumber::Min)
+             SequenceNumber(SequenceNumber::Min))
 {
 }
 
@@ -34,8 +34,8 @@ Smpp::Unbind::Unbind() :
 /// @param commandStatus The command status to use.
 /// @param sequenceNumber The sequence number to use.
 Smpp::Unbind::Unbind(const SequenceNumber& sequenceNumber) :
-    Request(CommandLength(MinLength), 
-             CommandId(CommandId::Unbind), 
+    Request(CommandLength(MinLength),
+             CommandId(CommandId::Unbind),
              sequenceNumber)
 {
 }
@@ -45,13 +45,9 @@ Smpp::Unbind::Unbind(const SequenceNumber& sequenceNumber) :
 Smpp::Unbind::Unbind(const Smpp::Uint8* b) :
     Request(CommandLength(MinLength),
              CommandId(CommandId::Unbind),
-             1)
+             SequenceNumber(1))
 {
     decode(b);
-}
-
-Smpp::Unbind::~Unbind()
-{
 }
 
 /// @brief Encode the message into an octet array.
@@ -74,12 +70,13 @@ Smpp::Unbind::decode(const Smpp::Uint8* buff)
 {
     Request::decode(buff);
 
-    Smpp::Uint32 len = Request::command_length();
+    auto len = Request::command_length();
     Smpp::Uint32 offset = 16;
     const char* err = "Bad length in unbind";
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
- 
+    }
+
     Header::decode_tlvs(buff + offset, len - offset);
 }
 

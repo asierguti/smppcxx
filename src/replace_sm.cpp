@@ -26,7 +26,7 @@
 Smpp::ReplaceSm::ReplaceSm() :
     Request(CommandLength(MinLength), 
     CommandId(CommandId::ReplaceSm), 
-    SequenceNumber::Min)
+    SequenceNumber(SequenceNumber::Min))
 {
 }
 
@@ -43,13 +43,13 @@ Smpp::ReplaceSm::ReplaceSm() :
 /// @param shortMessage The short message to use, its length is sm_length.
 Smpp::ReplaceSm::ReplaceSm(
         const SequenceNumber& sequenceNumber,
-        const MessageId& messageId,
-        const SmeAddress& sourceAddr,
-        const Smpp::Time& scheduleDeliveryTime,
-        const Smpp::Time& validityPeriod,
+        MessageId&& messageId,
+        SmeAddress&& sourceAddr,
+        Smpp::Time&& scheduleDeliveryTime,
+        Smpp::Time&& validityPeriod,
         const RegisteredDelivery& registeredDelivery,
         const SmDefaultMsgId& smDefaultMsgId,
-        const ShortMessage& shortMessage) :
+        ShortMessage&& shortMessage) :
     Request(CommandLength(MinLength), 
              CommandId(CommandId::ReplaceSm), 
              sequenceNumber),
@@ -71,13 +71,9 @@ Smpp::ReplaceSm::ReplaceSm(
 /// @brief Construct from a buffer.
 /// @param b The buffer (octet array).
 Smpp::ReplaceSm::ReplaceSm(const Smpp::Uint8* b) :
-    Request(CommandLength(MinLength), CommandId(CommandId::ReplaceSm), 1)
+    Request(CommandLength(MinLength), CommandId(CommandId::ReplaceSm), SequenceNumber(1))
 {
     decode(b);
-}
-
-Smpp::ReplaceSm::~ReplaceSm()
-{
 }
 
 /// @brief Encode the message into an octet array.
@@ -113,45 +109,53 @@ Smpp::ReplaceSm::decode(const Smpp::Uint8* buff)
     Smpp::Uint32 len = Request::command_length();
     Smpp::Uint32 offset = 16;
     const char* err = "Bad length in replace_sm";
-    if(len < offset)
+    if(len < offset){
         throw Error(err);
+    }
  
-    const Smpp::Char* sptr = reinterpret_cast<const Smpp::Char*>(buff);
+    const auto sptr = reinterpret_cast<const Smpp::Char*>(buff);
 
     message_id_ = &sptr[offset];
     offset += message_id_.length() + 1;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     source_addr_.decode(buff+offset, len - offset);
     offset += source_addr_.address().length() + 3; // ton + npi + '\0'
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     schedule_delivery_time_ = &sptr[offset];
     offset += schedule_delivery_time_.length() + 1;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
  
     validity_period_ = &sptr[offset];
     offset += validity_period_.length() + 1;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
  
     registered_delivery_ = buff[offset];
     ++offset;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
  
     sm_default_msg_id_ = buff[offset];
     ++offset;
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     short_message_ = buff+offset;
     offset += short_message_.length() + 1; // plus sm_length
-    if(len < offset)
+    if(len < offset) {
         throw Error(err);
+    }
 
     Header::decode_tlvs(buff + offset, len - offset);
 }

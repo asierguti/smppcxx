@@ -45,13 +45,13 @@ namespace Smpp {
         DeliverSmResp(
                 const CommandStatus& commandStatus,
                 const SequenceNumber& sequenceNumber,
-                const MessageId& messageId = MessageId());
+                MessageId&& messageId = MessageId());
        
         /// @brief Construct from a buffer.
         DeliverSmResp(const Smpp::Uint8* b);
 
         /// @brief Destructor - does nothing.
-        ~DeliverSmResp();
+        ~DeliverSmResp() = default;
         
         //
         // Mutating
@@ -60,7 +60,7 @@ namespace Smpp {
         /// @brief Sets the message id.
         /// @param p The message id.
         void message_id(const MessageId& p) {
-            int diff = p.length() - message_id_.length();
+            auto diff = p.length() - message_id_.length();
             message_id_ = p;
             Header::update_length(diff);
         }
@@ -68,7 +68,7 @@ namespace Smpp {
         /// @brief Sets the message id.
         /// @param p The message id.
         void message_id(const Smpp::Char* p) {
-            int diff = strlen(p) - message_id_.length();
+            auto diff = strlen(p) - message_id_.length();
             message_id_ = p;
             Header::update_length(diff);
         }

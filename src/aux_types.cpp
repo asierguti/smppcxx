@@ -28,13 +28,14 @@
 void
 Smpp::SmeAddress::decode(const Smpp::Uint8* buff, Smpp::Uint32 len)
 {
-    if(len < 3)
+    if(len < 3){
         throw Smpp::Error("Invalid SmeAddress length");
+    }
 
     const Smpp::Uint8* t = buff;
     ton_ = t[0];
     npi_ = t[1];
-    const Smpp::Char* s = reinterpret_cast<const Smpp::Char*>(buff);
+    const auto s = reinterpret_cast<const Smpp::Char*>(buff);
     addr_ = s+2;
 }
 
@@ -44,8 +45,9 @@ Smpp::SmeAddress::decode(const Smpp::Uint8* buff, Smpp::Uint32 len)
 void Smpp::MultiDestinationAddresses::decode(const Smpp::Uint8* buff, Smpp::Uint32 len)
 {
     const Smpp::Uint8* ptr = buff;
-    if(len < 3)
+    if(len < 3){
         throw Smpp::Error("Invalid command_length");
+    }
     
     Smpp::Uint8 cnt = ptr[octetCount_++];
 
@@ -57,9 +59,10 @@ void Smpp::MultiDestinationAddresses::decode(const Smpp::Uint8* buff, Smpp::Uint
                 SmeAddress smeaddr;
                 smeaddr.decode(ptr + octetCount_, len - octetCount_);
                 octetCount_ += smeaddr.length();
-                if(octetCount_ > len)
+                if(octetCount_ > len){
                     throw Smpp::Error("Invalid command_length");
-                this->add(smeaddr);
+                }
+                add(smeaddr);
                 break;
               }
             case 0x02: // Distribution list address
@@ -67,9 +70,10 @@ void Smpp::MultiDestinationAddresses::decode(const Smpp::Uint8* buff, Smpp::Uint
                 Smpp::String dlname =
                         reinterpret_cast<const Smpp::Char*>(buff) + octetCount_;
                 octetCount_ += dlname.length() + 1; // '\0'
-                if(octetCount_ > len)
+                if(octetCount_ > len){
                     throw Smpp::Error("Invalid command_length");
-                this->add(dlname);
+                }
+                add(dlname);
                 break;
               }
             default:
@@ -84,9 +88,10 @@ void Smpp::MultiDestinationAddresses::decode(const Smpp::Uint8* buff, Smpp::Uint
 /// @param len The number of octets left in the buffer.
 void
 Smpp::UnsuccessSmeColl::decode(const Smpp::Uint8* buff, Smpp::Uint32 len) {
-    const Smpp::Uint8* ptr = static_cast<const Smpp::Uint8*>(buff);
-    if(len < 1)
+    const auto ptr = static_cast<const Smpp::Uint8*>(buff);
+    if(len < 1){
         throw Smpp::Error("Invalid command_length");
+    }
 
     // first octet in the number of unsuccess (no_unsuccess).
     Smpp::Uint8 cnt = ptr[octetCount_++];
@@ -94,9 +99,10 @@ Smpp::UnsuccessSmeColl::decode(const Smpp::Uint8* buff, Smpp::Uint32 len) {
     for(Uint32 i = 0; i < cnt; ++i) {
         UnsuccessSme addr(ptr + octetCount_, len - octetCount_);
         octetCount_ += addr.length();
-        if(octetCount_ > len)
+        if(octetCount_ > len){
             throw Smpp::Error("Invalid command_length");
-        this->add(addr);
+        }
+        add(addr);
     }
 }
 
@@ -109,18 +115,21 @@ Smpp::UnsuccessSmeColl::decode(const Smpp::Uint8* buff, Smpp::Uint32 len) {
 /// @param file The C file stream to write to (default standard output).
 void Smpp::chex_dump(const Smpp::Uint8* buff, Smpp::Uint32 len, FILE* file)
 {
-    if(len == 0)
+    if(len == 0){
         return;
+    }
 
     Smpp::Uint32 i;
     for(i = 0; i < len; ++i) {
         if(i != 0 && i % 16 == 0) {
             fprintf(file, "   ");
-            for(Smpp::Uint32 j = i - 16; j < i; ++j)
-                if(buff[j] > 31 && buff[j] < 128)
+            for(Smpp::Uint32 j = i - 16; j < i; ++j){
+                if(buff[j] > 31 && buff[j] < 128){
                     fprintf(file, "%c", static_cast<char>(buff[j]));
-                else
+                } else {
                     fprintf(file, ".");
+                }
+            }
             fprintf(file, "\n");
         }
     
@@ -130,12 +139,13 @@ void Smpp::chex_dump(const Smpp::Uint8* buff, Smpp::Uint32 len, FILE* file)
     Smpp::Uint32 m = i % 16 ? 16 - i % 16 : 0; // octets needed to make up 16
     m && fprintf(file, "%*c", m * 3, ' ');
     fprintf(file, "   ");
-    for(Smpp::Uint32 j = i % 16 ? i - i % 16 : i - 16 ; j < i; ++j)
-        if(buff[j] > 31 && buff[j] < 128)
+    for(Smpp::Uint32 j = i % 16 ? i - i % 16 : i - 16 ; j < i; ++j){
+        if(buff[j] > 31 && buff[j] < 128){
             fprintf(file, "%c", static_cast<char>(buff[j]));
-        else
+        } else{
             fprintf(file, ".");
-
+        }
+    }
     fprintf(file, "\n");
     fflush(file);
 }
@@ -149,34 +159,39 @@ void Smpp::chex_dump(const Smpp::Uint8* buff, Smpp::Uint32 len, FILE* file)
 /// @param file The C++ file stream to write to (default standard output).
 void Smpp::hex_dump(const Smpp::Uint8* buff, Smpp::Uint32 len, std::ostream& os)
 {
-    if(len == 0)
+    if(len == 0){
         return;
+    }
 
     Smpp::Uint32 i;
     for(i = 0; i < len; ++i) {
         if(i != 0 && i % 16 == 0) {
             os << "   ";
-            for(Smpp::Uint32 j = i - 16; j < i; ++j)
-                if(buff[j] > 31 && buff[j] < 128)
+            for(Smpp::Uint32 j = i - 16; j < i; ++j){
+                if(buff[j] > 31 && buff[j] < 128) {
                     os << static_cast<char>(buff[j]);
-                else
+                } else{
                     os << ".";
+                }
+            }
             os << "\n";
         }
     
         os << std::setw(2) << std::setfill('0')
-           << std::hex << (int)buff[i] << std::dec << ' ';
+           << std::hex << static_cast<int> (buff[i]) << std::dec << ' ';
     }
 
     Smpp::Uint32 m = i % 16 ? 16 - i % 16 : 0;// octets needed to make up 16
     m && os << std::setw(m*3) << std::setfill(' ') << ' ';
     
     os << "   ";
-    for(Smpp::Uint32 j = i % 16 ? i - i % 16 : i - 16 ; j < i; ++j)
-        if(buff[j] > 31 && buff[j] < 128)
+    for(Smpp::Uint32 j = i % 16 ? i - i % 16 : i - 16 ; j < i; ++j) {
+        if(buff[j] > 31 && buff[j] < 128){
             os << static_cast<char>(buff[j]);
-        else
+        } else{
             os << ".";
+        }
+    }
 
     os << "\n";
     std::flush(os);

@@ -6,12 +6,12 @@
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -23,6 +23,7 @@
 /// @brief class defining a tlv.
 
 #include "aux_types.hpp"
+#include "buffer.hpp"
 
 namespace Smpp {
 
@@ -96,16 +97,16 @@ namespace Smpp {
         };
 
       private:
-        Smpp::Uint16 tag_;
-        Smpp::Uint16 length_;
-        const Smpp::Uint8* value_;
+        Smpp::Uint16 tag_ {0};
+        Smpp::Uint16 length_ {0};
+        const Smpp::Uint8* value_ {nullptr};
 
         /// @brief Helper that allocates and copies the value
         /// @param l The length of the value in octets.
         /// @param v The value to be copied.
         /// @return The copied value.
         Smpp::Uint8* build_value(const Smpp::Uint16& l, const Smpp::Uint8* v) {
-            Smpp::Uint8* t(new Smpp::Uint8[l]);
+            auto t(new Smpp::Uint8[l]);
             std::copy(v, v+l, t);
             return t;
         }
@@ -115,16 +116,16 @@ namespace Smpp {
         class Encoder {
             Smpp::Buffer& b_;
           public:
-            Encoder(Smpp::Buffer& b) : b_(b) {}
+            explicit Encoder(Smpp::Buffer& b) : b_(b) {}
             void operator()(const Tlv*& tlv) {
                 b_ += Smpp::hton16(tlv->tag());
                 b_ += Smpp::hton16(tlv->length());
                 b_.add_octet_array(tlv->length(), tlv->value());
             }
         };
-      
+
         /// @brief Default constructor acts as a null TLV.
-        Tlv() : tag_(0), length_(0), value_(0) {}
+        Tlv() : tag_(0), length_(0), value_(nullptr) {}
 
         /// @brief Copy constructor.
         /// @param tlv The TLV to copy from.
@@ -133,7 +134,7 @@ namespace Smpp {
             length_(tlv.length_),
             value_(build_value(tlv.length_, tlv.value_)) {
         }
-        
+
         /// @brief Construct using tag length and value
         /// @param t The tag.
         /// @param l The length of the value in octets.
@@ -141,28 +142,30 @@ namespace Smpp {
         Tlv(const Smpp::Uint16& t, const Smpp::Uint16& l, const Smpp::Uint8* v) :
             tag_(t), length_(l), value_(build_value(l, v)) {
         }
-      
+
         /// @brief Deallocate the value.
         virtual ~Tlv() { delete [] value_; }
-      
+
         Tlv& operator=(const Tlv& rhs) {
-            if(this == &rhs)
+            if(this == &rhs) {
                 return *this;
+            }
 
             tag_ = rhs.tag_;
             length_ = rhs.length_;
             value_ = build_value(rhs.length_, rhs.value_);
+            return *this;
         }
-        
+
         /// @brief tag comparsion.
         bool operator==(const Smpp::Uint16& tag) const { return tag == tag_; }
 
         /// @brief Test validity of the tlv.
-        operator bool() const { return tag_ != 0; }
+        explicit operator bool() const { return tag_ != 0; }
 
         /// @return The tlv tag.
         Smpp::Uint16 tag() const { return tag_; }
-        
+
         /// @return The tlv length.
         Smpp::Uint16 length() const { return length_; }
 
@@ -173,7 +176,7 @@ namespace Smpp {
         class CompareTag {
             const Smpp::Uint16& tag_;
           public:
-            CompareTag(const Smpp::Uint16& tag) : tag_(tag) {}
+            explicit CompareTag(const Smpp::Uint16& tag) : tag_(tag) {}
             bool operator()(const Tlv* p) const {
                 return p->tag() == tag_;
             }
@@ -189,7 +192,7 @@ namespace Smpp {
         /// @param x An extra field to differenciate it from the public
         /// constructor.
         Tlv(const Smpp::Uint16& t,
-                const Smpp::Uint16& l, const Smpp::Uint8* v, int x) :
+                const Smpp::Uint16& l, const Smpp::Uint8* v, int /*x*/) :
             tag_(t), length_(l), value_(v) {
         }
     };
@@ -197,24 +200,25 @@ namespace Smpp {
     //
     // Specific TLVs derived from Tlv
     //
-    
+
     /// @brief Builds a broadcast_area_identifier TLV.
     class BroadcastAreaIdentifier : public Tlv {
         Smpp::Uint8* allocate_value(const Smpp::Uint8& format,
                                     const Smpp::Uint8* details,
                                     const Smpp::Uint16& length) {
-            Smpp::Uint8* v = new Smpp::Uint8[ length+1];
+            auto v = new Smpp::Uint8[ length+1];
             v[0] = format;
-            if(length)
+            if(length != 0u) {
                 std::copy(details, details+length, v+1);
+            }
             return v;
         }
-        BroadcastAreaIdentifier();
       public:
         /// @brief Construct using format, details and details length.
         /// @param format The format.
         /// @param details The details array.
         /// @param length The details length in octets.
+        BroadcastAreaIdentifier() = delete;
         BroadcastAreaIdentifier(const Smpp::Uint8& format,
                                 const Smpp::Uint8* details,
                                 const Smpp::Uint16& length) :
@@ -223,63 +227,63 @@ namespace Smpp {
                  allocate_value(format, details, length),
                  0) {}
     };
-    
+
     /// @brief Builds a broadcast_content_type TLV.
     class BroadcastContentType : public Tlv {
         Smpp::Uint8* allocate_value(const Smpp::Uint8& typeTag, const Smpp::Uint16& type) {
-            Smpp::Uint8* v = new Smpp::Uint8[3];
+            auto v = new Smpp::Uint8[3];
             v[0] = typeTag;
             Smpp::Uint16 t = Smpp::hton16(type);
-            Smpp::Uint8* tptr = reinterpret_cast<Uint8*>(&t);
+            auto tptr = reinterpret_cast<Uint8*>(&t);
             std::memcpy(v+1, tptr, 2);
             return v;
         }
-        BroadcastContentType();
       public:
         /// @brief Construct using type tag and type.
         /// @param typeTag The type tag.
         /// @param type The type.
+        BroadcastContentType() = delete;
         BroadcastContentType(const Smpp::Uint8& typeTag, const Smpp::Uint16& type) :
             Tlv(Tlv::broadcast_content_type,
                  3,
                  allocate_value(typeTag, type),
                  0) {}
     };
-   
+
     /// @brief Builds a broadcast_frequency_interval TLV.
     class BroadcastFrequencyInterval : public Tlv {
         Smpp::Uint8* allocate_value(const Smpp::Uint8& type, const Smpp::Uint16& units) {
-            Smpp::Uint8* v = new Smpp::Uint8[3];
+            auto v = new Smpp::Uint8[3];
             v[0] = type;
             Smpp::Uint16 t = Smpp::hton16(units);
-            Smpp::Uint8* tptr = reinterpret_cast<Uint8*>(&t);
+            auto tptr = reinterpret_cast<Uint8*>(&t);
             std::memcpy(v+1, tptr, 2);
             return v;
         }
-        BroadcastFrequencyInterval();
       public:
         /// @brief Construct using unit type and units.
         /// @param type The units types.
         /// @param units The number of units.
+        BroadcastFrequencyInterval() = delete;
         BroadcastFrequencyInterval(const Smpp::Uint8& type, const Smpp::Uint16& units) :
             Tlv(Tlv::broadcast_frequency_interval,
                  3,
                  allocate_value(type, units),
                  0) {}
     };
-  
+
     /// @brief Builds a broadcast_area_success TLV.
     class BroadcastAreaSuccess : public Tlv {
         Smpp::Uint8* allocate_value(const Smpp::Uint8& sRate) {
-            Smpp::Uint8* v = new Smpp::Uint8[1];
+            auto v = new Smpp::Uint8[1];
             v[0] = sRate;
             return v;
         }
-        BroadcastAreaSuccess();
       public:
         /// @brief Construct using the broadcast successs rate.
         /// @param sRate The success rate.
-        BroadcastAreaSuccess(const Smpp::Uint8& sRate) :
+        BroadcastAreaSuccess() = delete;
+        explicit BroadcastAreaSuccess(const Smpp::Uint8& sRate) :
             Tlv(Tlv::broadcast_area_success,
                  1,
                  allocate_value(sRate),

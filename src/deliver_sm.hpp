@@ -56,25 +56,25 @@ namespace Smpp {
         /** @brief Constructor requiring all mandatory parameters. */
         DeliverSm(
                 const SequenceNumber& sequenceNumber,
-                const ServiceType& serviceType,
-                const SmeAddress& sourceAddr,
-                const SmeAddress& destinationAddr,
+                ServiceType&& serviceType,
+                SmeAddress&& sourceAddr,
+                SmeAddress&& destinationAddr,
                 const EsmClass& esmClass,
                 const ProtocolId& protocolId,
                 const PriorityFlag& priorityFlag,
-                const Time& scheduleDeliveryTime,
-                const Time& validityPeriod,
+                Time&& scheduleDeliveryTime,
+                Time&& validityPeriod,
                 const RegisteredDelivery& registeredDelivery,
                 const ReplaceIfPresentFlag& replaceIfPresentFlag,
                 const DataCoding& dataCoding,
                 const SmDefaultMsgId& smDefaultMsgId,
-                const ShortMessage& shortMessage);
+                ShortMessage&& shortMessage);
        
         /// @brief Construct from a buffer.
         DeliverSm(const Smpp::Uint8* b);
 
         /// @brief Destructor - does nothing.
-        ~DeliverSm();
+        ~DeliverSm() = default;
         
         //
         // Mutating
@@ -83,7 +83,7 @@ namespace Smpp {
         /// @brief Set the service type.
         /// @param p The new service type.
         void service_type(const ServiceType& p) {
-            int diff = p.length() - service_type_.length();
+            auto diff = p.length() - service_type_.length();
             service_type_ = p;
             Header::update_length(diff);
         }
@@ -91,7 +91,7 @@ namespace Smpp {
         /// @brief Set the service type.
         /// @param p The new service type.
         void service_type(const Smpp::Char* p) {
-            int diff = strlen(p) - service_type_.length();
+            auto diff = strlen(p) - service_type_.length();
             service_type_ = p;
             Header::update_length(diff);
         }
@@ -99,7 +99,7 @@ namespace Smpp {
         /// @brief Set the source address using an SmeAddress object.
         /// @param p The new source address.
         void source_addr(const SmeAddress& p) {
-            int diff = p.address().length() - source_addr_.address().length();
+            auto diff = p.address().length() - source_addr_.address().length();
             source_addr_ = p;
             Header::update_length(diff);
         }
@@ -107,7 +107,7 @@ namespace Smpp {
         /// @brief Set the source address using just the address.
         /// @param p The source address characters.
         void source_addr(const Address& p) {
-            int diff = p.length() - source_addr_.address().length();
+            auto diff = p.length() - source_addr_.address().length();
             source_addr_ = SmeAddress(Smpp::Ton(Smpp::Ton::Unknown),
                                        Smpp::Npi(Smpp::Npi::Unknown),
                                        p);
@@ -117,7 +117,7 @@ namespace Smpp {
         /// @brief Set the destination address using an SmeAddress object.
         /// @param p The new destination address.
         void destination_addr(const SmeAddress& p) {
-            int diff =
+            auto diff =
                 p.address().length() - destination_addr_.address().length();
             destination_addr_ = p;
             Header::update_length(diff);
@@ -126,7 +126,7 @@ namespace Smpp {
         /// @brief Set the destination address using just the address.
         /// @param p The destination address characters.
         void destination_addr(const Address& p) {
-            int diff = p.length() - destination_addr_.address().length();
+            auto diff = p.length() - destination_addr_.address().length();
             destination_addr_ = SmeAddress(Smpp::Ton(Smpp::Ton::Unknown),
                                             Smpp::Npi(Smpp::Npi::Unknown),
                                             p);
@@ -148,7 +148,7 @@ namespace Smpp {
         /// @brief Set the schedule delivery time.
         /// @param p The new schedule delivery time.
         void schedule_delivery_time(const Time& p) {
-            int diff = p.length() - schedule_delivery_time_.length();
+            auto diff = p.length() - schedule_delivery_time_.length();
             schedule_delivery_time_ = p;
             Header::update_length(diff);
         }
@@ -156,7 +156,7 @@ namespace Smpp {
         /// @brief Set the schedule delivery time.
         /// @param p The new schedule delivery time.
         void schedule_delivery_time(const Smpp::Char* p) {
-            int diff = strlen(p) - schedule_delivery_time_.length();
+            auto diff = strlen(p) - schedule_delivery_time_.length();
             schedule_delivery_time_ = p;
             Header::update_length(diff);
         }
@@ -164,7 +164,7 @@ namespace Smpp {
         /// @brief Set the validity period.
         /// @param p The new validity period.
         void validity_period(const Time& p) {
-            int diff = p.length() - validity_period_.length();
+            auto diff = p.length() - validity_period_.length();
             validity_period_ = p;
             Header::update_length(diff);
         }
@@ -172,7 +172,7 @@ namespace Smpp {
         /// @brief Set the validity period.
         /// @param p The new validity period.
         void validity_period(const Smpp::Char* p) {
-            int diff = strlen(p) - validity_period_.length();
+            auto diff = strlen(p) - validity_period_.length();
             validity_period_ = p;
             Header::update_length(diff);
         }
@@ -203,7 +203,7 @@ namespace Smpp {
         /// @param p The new short message.
         /// @param l The new short message length.
         void short_message(const Smpp::Uint8* p, Smpp::Uint8 l) {
-            int diff = l - short_message_.length();
+            auto diff = l - short_message_.length();
             short_message_ = ShortMessage(p, l);
             Header::update_length(diff);
         }

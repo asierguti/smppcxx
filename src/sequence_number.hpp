@@ -6,12 +6,12 @@
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -29,7 +29,6 @@ namespace Smpp {
     /// @class SequenceNumber
     /// @brief Defines sequence number rules.
     class SequenceNumber {
-        SequenceNumber();
         Smpp::Uint32 val_;
     public:
         /// Sequence number limits.
@@ -44,18 +43,22 @@ namespace Smpp {
         /// @return The sequence number.
         /// @throw Smpp::Error if the sequence number is invalid
         static Smpp::Uint32 assign(const Smpp::Uint32& p,  bool allow_0 = false) {
-            if((p <= Max && p > 0) || (p == 0 && allow_0 == true))
+            if((p <= Max && p > 0) || (p == 0 && allow_0)){
                 return p;
-            else
+            } else {
                 throw Error("Invalid sequence number");
+            }
         }
-       
+
         /// @brief Constructs a sequence number from p.
         /// @param p The sequence number.
         /// @param allow_0 True if 0 (zero) is a valid sequence number.
         /// @return The sequence number.
         /// @throw Smpp::Error if the sequence number is invalid
-        SequenceNumber(const Smpp::Uint32& p,  bool allow_0 = false) : 
+
+        SequenceNumber() = delete;
+
+        explicit SequenceNumber(const Smpp::Uint32& p,  bool allow_0 = false) :
             val_(assign(p, allow_0)) {}
 
         /// @brief The prefix increment operator.
@@ -64,18 +67,18 @@ namespace Smpp {
             val_ = (val_ == Max) ? Min : ++val_;
             return *this;
         }
-        
+
         /// @brief The postfix increment operator.
         /// @return The value before been incremented.
-        SequenceNumber operator++(int) {
+        const SequenceNumber operator++(int) {
             SequenceNumber t = *this;
             val_ = (val_ == Max) ? Min : ++val_;
             return t;
         }
-        
+
         /// @brief Accesses the sequence number as a 32 bit unsigned int.
         /// @return The sequence number.
-        operator Smpp::Uint32() const { return val_; }
+        explicit operator Smpp::Uint32() const { return val_; }
 
         /// @brief Decode the sequence number from an SMPP PDU octet buffer.
         /// @param buff The octet buffer (array).
@@ -84,6 +87,10 @@ namespace Smpp {
             Smpp::Uint32 seqnum;
             memcpy(&seqnum, &buff[12], sizeof seqnum);
             return Smpp::ntoh32(seqnum);
+        }
+
+        Smpp::Uint32 getLength() const {
+            return val_;
         }
 
     };
